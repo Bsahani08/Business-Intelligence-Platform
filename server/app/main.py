@@ -5,6 +5,7 @@ import pandas as pd
 from io import BytesIO
 
 from app.services.data_quality import analyze_data_quality
+from app.services.data_cleaning import clean_dataset
 
 
 app = FastAPI(
@@ -94,9 +95,17 @@ async def upload_datasets(
         # Clean column names
         # ------------------------------------------
 
-        sales_df.columns = sales_df.columns.str.strip()
-        features_df.columns = features_df.columns.str.strip()
-        stores_df.columns = stores_df.columns.str.strip()
+        sales_df.columns = (
+            sales_df.columns.str.strip()
+        )
+
+        features_df.columns = (
+            features_df.columns.str.strip()
+        )
+
+        stores_df.columns = (
+            stores_df.columns.str.strip()
+        )
 
         # ------------------------------------------
         # Required columns
@@ -179,6 +188,22 @@ async def upload_datasets(
             )
 
         # ------------------------------------------
+        # Clean datasets
+        # ------------------------------------------
+
+        sales_df, sales_cleaning = clean_dataset(
+            sales_df
+        )
+
+        features_df, features_cleaning = clean_dataset(
+            features_df
+        )
+
+        stores_df, stores_cleaning = clean_dataset(
+            stores_df
+        )
+
+        # ------------------------------------------
         # Convert dates
         # ------------------------------------------
 
@@ -193,7 +218,7 @@ async def upload_datasets(
         )
 
         # ------------------------------------------
-        # Analyze Data Quality
+        # Analyze cleaned datasets
         # ------------------------------------------
 
         sales_quality = analyze_data_quality(
@@ -271,8 +296,8 @@ async def upload_datasets(
         return {
 
             "message": (
-                "Datasets uploaded and "
-                "analyzed successfully"
+                "Datasets uploaded, cleaned, "
+                "and analyzed successfully"
             ),
 
             # --------------------------------------
@@ -326,7 +351,21 @@ async def upload_datasets(
             },
 
             # --------------------------------------
-            # Missing Values
+            # Cleaning Results
+            # --------------------------------------
+
+            "cleaning_summary": {
+
+                "sales": sales_cleaning,
+
+                "features": features_cleaning,
+
+                "stores": stores_cleaning,
+
+            },
+
+            # --------------------------------------
+            # Missing Values After Cleaning
             # --------------------------------------
 
             "missing_values": {
